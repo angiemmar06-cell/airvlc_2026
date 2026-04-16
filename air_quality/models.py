@@ -13,14 +13,13 @@ class Station(models.Model):
     def __str__(self):
         return self.name
 
-
 class Measurement(models.Model):
     station = models.ForeignKey(
         Station,
         on_delete=models.CASCADE,
         related_name="measurements"
     )
-    date = models.DateField()
+    measured_at = models.DateTimeField()
 
     # Main pollutants
     no2 = models.FloatField(null=True, blank=True)
@@ -56,20 +55,16 @@ class Measurement(models.Model):
     precipitation = models.FloatField(null=True, blank=True)
     noise = models.FloatField(null=True, blank=True)
 
-    # Dataset metadata
-    source_created_date = models.DateField(null=True, blank=True)
-    source_removed_date = models.DateField(null=True, blank=True)
-
     class Meta:
         verbose_name = "Measurement"
         verbose_name_plural = "Measurements"
-        ordering = ["-date", "station__name"]
+        ordering = ["-measured_at", "station__name"]
         constraints = [
             models.UniqueConstraint(
-                fields=["station", "date"],
-                name="unique_station_date_measurement"
+                fields=["station", "measured_at"],
+                name="unique_station_measured_at"
             )
         ]
 
     def __str__(self):
-        return f"{self.station.name} - {self.date}"
+        return f"{self.station.name} - {self.measured_at}"
