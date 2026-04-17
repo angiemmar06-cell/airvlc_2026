@@ -16,14 +16,36 @@ class Command(BaseCommand):
     help = "Import air quality data in batches from València CKAN API"
 
     def add_arguments(self, parser):
-        parser.add_argument("--limit", type=int, default=100, help="Records per batch")
-        parser.add_argument("--offset", type=int, default=0, help="Initial offset")
-        parser.add_argument("--max-batches", type=int, default=1, help="Number of batches to fetch")
+        parser.add_argument(
+            "--limit",
+            type=int,
+            default=100,
+            help="Records per batch"
+        )
+        parser.add_argument(
+            "--offset",
+            type=int,
+            default=0,
+            help="Initial offset"
+        )
+        parser.add_argument(
+            "--max-batches",
+            type=int,
+            default=1,
+            help="Number of batches to fetch"
+        )
+        parser.add_argument(
+            "--station",
+            type=str,
+            default=None,
+            help="Filter by station name"
+        )
 
     def handle(self, *args, **options):
         limit = options["limit"]
         offset = options["offset"]
         max_batches = options["max_batches"]
+        station_filter = options["station"]
 
         total_imported = 0
         total_skipped = 0
@@ -32,7 +54,9 @@ class Command(BaseCommand):
             current_offset = offset + batch * limit
 
             self.stdout.write(
-                self.style.NOTICE(f"Batch {batch+1}/{max_batches} | offset={current_offset}")
+                self.style.NOTICE(
+                    f"Batch {batch + 1}/{max_batches} | offset={current_offset}"
+                )
             )
 
             params = {
@@ -40,6 +64,9 @@ class Command(BaseCommand):
                 "limit": limit,
                 "offset": current_offset,
             }
+
+            if station_filter:
+                params["filters"] = f'{{"Estacion":"{station_filter}"}}'
 
             response = requests.get(
                 API_URL,
@@ -49,16 +76,27 @@ class Command(BaseCommand):
             )
             response.raise_for_status()
 
+            content_type = response.headers.get("Content-Type", "")
+            if "json" not in content_type.lower():
+                self.stdout.write(
+                    self.style.ERROR(f"Expected JSON, got: {content_type}")
+                )
+                self.stdout.write(response.text[:1000])
+                break
+
             data = response.json()
 
             if not data.get("success"):
                 self.stdout.write(self.style.ERROR("API returned success=False"))
+                self.stdout.write(str(data)[:1000])
                 break
 
             records = data.get("result", {}).get("records", [])
 
             if not records:
-                self.stdout.write(self.style.WARNING("No more records found. Stopping."))
+                self.stdout.write(
+                    self.style.WARNING("No more records found. Stopping.")
+                )
                 break
 
             imported_count = 0
@@ -78,11 +116,21 @@ class Command(BaseCommand):
                         station = Station.objects.get(name=station_name)
                     except Station.DoesNotExist:
                         skipped_count += 1
+                        self.stdout.write(
+                            self.style.WARNING(
+                                f"Skipped record: station '{station_name}' not found."
+                            )
+                        )
                         continue
 
                     measured_at = self.combine_datetime(fecha_str, hora_str)
                     if not measured_at:
                         skipped_count += 1
+                        self.stdout.write(
+                            self.style.WARNING(
+                                f"Skipped record with invalid Fecha/Hora: {fecha_str} | {hora_str}"
+                            )
+                        )
                         continue
 
                     Measurement.objects.update_or_create(
@@ -110,6 +158,11 @@ class Command(BaseCommand):
                             "solar_radiation": self.to_float(record.get("Radiacion")),
                             "precipitation": self.to_float(record.get("Precipitacion")),
                             "noise": self.to_float(record.get("Ruido")),
+                            "as_ng_m3": None,
+                            "ni_ng_m3": None,
+                            "cd_ng_m3": None,
+                            "pb_ng_m3": None,
+                            "b_a_p_ng_m3": None,
                         }
                     )
 
@@ -135,7 +188,7 @@ class Command(BaseCommand):
             return None
         try:
             return float(value)
-        except:
+        except (TypeError, ValueError):
             return None
 
     def combine_datetime(self, fecha_value, hora_value):
@@ -143,15 +196,24 @@ class Command(BaseCommand):
             return None
 
         try:
-            date_part = fecha_value.split("T")[0]
+            if "T" in fecha_value:
+                date_part = fecha_value.split("T")[0]
+            elif " " in fecha_value:
+                date_part = fecha_value.split(" ")[0]
+            else:
+                date_part = fecha_value
+
             time_part = hora_value if hora_value else "00:00:00"
 
-            dt = datetime.strptime(f"{date_part} {time_part}", "%Y-%m-%d %H:%M:%S")
+            dt = datetime.strptime(
+                f"{date_part} {time_part}",
+                "%Y-%m-%d %H:%M:%S"
+            )
 
             if timezone.is_naive(dt):
                 dt = timezone.make_aware(dt, timezone.get_current_timezone())
 
             return dt
 
-        except:
+        except (TypeError, ValueError):
             return None
