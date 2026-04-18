@@ -27,7 +27,7 @@ def measurements_geojson(request):
             "measured_at": measurement.measured_at.isoformat() if measurement.measured_at else None, #para convertir la fecha a formato ISO 8601, que es un formato estándar para fechas en JSON
             "no2": measurement.no2,
             "pm10": measurement.pm10,
-            "pm2_5": measurement.pm25,
+            "pm2_5": measurement.pm2_5,
             "o3": measurement.o3,
             "so2": measurement.so2,
             "co": measurement.co,
