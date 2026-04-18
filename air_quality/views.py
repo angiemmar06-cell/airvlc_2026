@@ -17,3 +17,15 @@ def stations_geojson(request):
         #station.location.y --> coordenada de latitud (lat) = y
     return JsonResponse(data, safe=False) #devuelve una lista JSON
 
+def measurements_geojson(request):
+    measurements = measurement.objects.filter(station__isnull=False).order_by('timestamp')
+    data = []
+    
+    for measurement in measurements:
+        data.append({
+            "station": measurement.station.name,
+            "timestamp": measurement.timestamp,
+            "value": measurement.value,
+        })
+
+    return JsonResponse(data, safe=False) #devuelve una lista JSON
