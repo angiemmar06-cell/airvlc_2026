@@ -1,6 +1,9 @@
 from django.http import JsonResponse
 from .models import Measurement, Station
 
+#filtro que solo permite mostrar los contaminantes que se encuentran en la lista ALLOWED_POLLUTANTS, evitando mostrar otros campos que puedan existir en el modelo Measurement pero que no son relevantes para la API. Esto ayuda a mantener la respuesta de la API más limpia y enfocada en los datos de interés.
+ALLOWED_POLLUTANTS = ['no2', 'pm10', 'pm2_5', 'o3', 'so2', 'co', 'no']
+
 # Create your views here.
 def stations_geojson(request):
     stations = Station.objects.filter(measurements__isnull=False).distinct().order_by('name')
@@ -18,20 +21,40 @@ def stations_geojson(request):
     return JsonResponse(data, safe=False) #devuelve una lista JSON
 
 def measurements_geojson(request):
-    measurements = Measurement.objects.filter(station__isnull=False).order_by('measured_at')
+    #1. Leer los parametros de consulta
+    station_name = request.GET.get("station")
+    pollutant = request.GET.get("pollutant")
+    
+    #2. Validaciones
+    if not station_name:
+        return JsonResponse({"error": "Missing 'station' parameter"}, status=400)
+    
+    if not pollutant:
+        return JsonResponse({"error": "Missing 'pollutant' parameter"}, status=400)
+    
+    if pollutant not in ALLOWED_POLLUTANTS:
+        return JsonResponse({"error": f"Invalid 'pollutant' parameter. Allowed values are: {ALLOWED_POLLUTANTS}"}, status=400)
+    
+    #filtrar mediciones
+    measurements = Measurement.objects.filter(station__name=station_name).order_by('measured_at')
     data = []
     
-    for measurement in measurements [:1000]: #limita a las primeras 1000 mediciones para evitar sobrecargar la respuesta
+    for measurement in measurements [:500]:#limita a las primeras 500 mediciones para evitar sobrecargar la respuesta
+        value= getattr(measurement, pollutant) #getattr --> obtiene el valor del atributo especificado por el nombre del contaminante
+        #saltar los valores nulos o no disponibles
+        if value is None:
+            continue
+        
         data.append({
-            "station": measurement.station.name,
-            "measured_at": measurement.measured_at.isoformat() if measurement.measured_at else None, #para convertir la fecha a formato ISO 8601, que es un formato estándar para fechas en JSON
-            "no2": measurement.no2,
-            "pm10": measurement.pm10,
-            "pm2_5": measurement.pm2_5,
-            "o3": measurement.o3,
-            "so2": measurement.so2,
-            "co": measurement.co,
-            "no": measurement.no            
+            "time": measurement.measured_at.isoformat() if measurement.measured_at else None,
+            "value": value,
         })
+        
+    #5. Devolver la respuesta JSON
 
-    return JsonResponse(data, safe=False) #devuelve una lista JSON
+    return JsonResponse({
+        "station": station_name,
+        "pollutant": pollutant,
+        "count": len(data),
+        "data": data
+    }) #devuelve una lista JSON
