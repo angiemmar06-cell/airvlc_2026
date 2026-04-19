@@ -23,7 +23,7 @@ def stations_geojson(request):
 def measurements_geojson(request):
     #1. Leer los parametros de consulta
     station_name = request.GET.get("station", "").strip() #strip() --> elimina espacios en blanco al inicio y al final del nombre de la estación
-    pollutant = request.GET.get("pollutant")
+    pollutant = request.GET.get("pollutant", "").strip().lower() #lower() --> convierte el nombre del contaminante a minúsculas para evitar problemas de mayúsculas/minúsculas en la comparación con ALLOWED_POLLUTANTS
     
     #2. Validaciones
     if not station_name:
