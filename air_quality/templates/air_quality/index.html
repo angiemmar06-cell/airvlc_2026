@@ -1,0 +1,42 @@
+{% load static %}
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AireVLC — Calidad del aire en València</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+        crossorigin="">
+  <link rel="stylesheet" href="{% static 'air_quality/css/main.css' %}">
+</head>
+<body>
+  <aside id="sidebar">
+    <header>
+      <h1>AireVLC</h1>
+      <p class="subtitle">Calidad del aire en València</p>
+    </header>
+
+    <section id="controls">
+      <p class="placeholder">Filtros próximamente:</p>
+      <ul class="placeholder-list">
+        <li>Contaminante</li>
+        <li>Rango de fechas</li>
+        <li>Estaciones</li>
+      </ul>
+    </section>
+
+    <footer>
+      <p class="legend-title">Estaciones de medición</p>
+      <p class="legend-detail" id="station-count">Cargando…</p>
+    </footer>
+  </aside>
+
+  <main id="map"></main>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+          crossorigin=""></script>
+  <script src="{% static 'air_quality/js/main.js' %}"></script>
+</body>
+</html>

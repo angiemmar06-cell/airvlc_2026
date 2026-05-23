@@ -1,9 +1,16 @@
 from django.db.models import Avg, Count, Max, Min
 from django.db.models.functions import Trunc
 from django.http import JsonResponse
+from django.shortcuts import render
 from django.utils.dateparse import parse_date
 
+from .ica import classify
 from .models import Measurement, Station
+
+
+def index(request):
+    """Pagina principal: mapa Leaflet con las estaciones."""
+    return render(request, "air_quality/index.html")
 
 
 # Lista blanca: solo estos campos pueden consultarse desde la API.
@@ -130,10 +137,13 @@ def measurements_geojson(request):
         count=Count(pollutant),
     )
 
-    # 7. Serie temporal según el modo de agregación
+    # 7. Serie temporal según el modo de agregación. Cada punto incluye su categoria ICA.
     if aggregate == "hourly":
         rows = qs.order_by("measured_at").values_list("measured_at", pollutant)[:limit]
-        data = [{"time": t.isoformat(), "value": v} for t, v in rows]
+        data = [
+            {"time": t.isoformat(), "value": v, "category": classify(pollutant, v)}
+            for t, v in rows
+        ]
     else:
         trunc_kind = "day" if aggregate == "daily" else "month"
         aggregated = (
@@ -150,6 +160,7 @@ def measurements_geojson(request):
                     else row["period"].strftime("%Y-%m")
                 ),
                 "value": row["value"],
+                "category": classify(pollutant, row["value"]),
             }
             for row in aggregated
         ]
@@ -163,6 +174,7 @@ def measurements_geojson(request):
         "end_date": end_date.isoformat() if end_date else None,
         "limit": limit,
         "stats": stats,
+        "overall_category": classify(pollutant, stats["mean"]),
         "count": len(data),
         "data": data,
     })
