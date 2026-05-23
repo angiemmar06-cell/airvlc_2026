@@ -78,15 +78,24 @@ def measurements_geojson(request):
     if not Station.objects.filter(name=station_name).exists():
         return JsonResponse({"error": "Station not found"}, status=404)
 
-    # 3. Fechas opcionales (YYYY-MM-DD)
-    start_date = parse_date(start_date_str) if start_date_str else None
-    end_date = parse_date(end_date_str) if end_date_str else None
+    # 3. Fechas opcionales (YYYY-MM-DD).
+    # parse_date devuelve None para formato inválido (p. ej. "abc") pero lanza ValueError
+    # cuando el formato es correcto y el valor no existe (mes 13, día 32). Capturamos ambos.
+    try:
+        start_date = parse_date(start_date_str) if start_date_str else None
+    except ValueError:
+        start_date = None
+
+    try:
+        end_date = parse_date(end_date_str) if end_date_str else None
+    except ValueError:
+        end_date = None
 
     if start_date_str and not start_date:
-        return JsonResponse({"error": "Invalid 'start_date' format. Use YYYY-MM-DD"}, status=400)
+        return JsonResponse({"error": "Invalid 'start_date'. Use YYYY-MM-DD with a valid date"}, status=400)
 
     if end_date_str and not end_date:
-        return JsonResponse({"error": "Invalid 'end_date' format. Use YYYY-MM-DD"}, status=400)
+        return JsonResponse({"error": "Invalid 'end_date'. Use YYYY-MM-DD with a valid date"}, status=400)
 
     if start_date and end_date and start_date > end_date:
         return JsonResponse({"error": "'start_date' must be <= 'end_date'"}, status=400)
