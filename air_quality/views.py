@@ -54,6 +54,16 @@ def stations_geojson(request):
     return JsonResponse(data, safe=False)
 
 
+def meta(request):
+    """Rango temporal disponible en los datos. Se usa en el frontend para calcular
+    presets (ultimo mes, ultimo año, etc.) sin hardcodear fechas."""
+    agg = Measurement.objects.aggregate(min=Min("measured_at"), max=Max("measured_at"))
+    return JsonResponse({
+        "min_date": agg["min"].date().isoformat() if agg["min"] else None,
+        "max_date": agg["max"].date().isoformat() if agg["max"] else None,
+    })
+
+
 def measurements_geojson(request):
     # 1. Parámetros
     station_name = request.GET.get("station", "").strip()

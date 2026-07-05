@@ -212,7 +212,6 @@ class Command(BaseCommand):
 
             if timezone.is_naive(dt):
                 dt = timezone.make_aware(dt, timezone.get_current_timezone())
-
             return dt
 
         except (TypeError, ValueError):

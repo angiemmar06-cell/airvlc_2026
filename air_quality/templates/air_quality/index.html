@@ -18,13 +18,45 @@
     </header>
 
     <section id="controls">
-      <p class="placeholder">Filtros próximamente:</p>
-      <ul class="placeholder-list">
-        <li>Contaminante</li>
-        <li>Rango de fechas</li>
-        <li>Estaciones</li>
-      </ul>
+      <label class="field">
+        <span>Contaminante</span>
+        <select id="pollutant">
+          <option value="no2">NO₂</option>
+          <option value="pm10">PM10</option>
+          <option value="pm2_5">PM2.5</option>
+          <option value="o3">O₃</option>
+          <option value="so2">SO₂</option>
+          <option value="co">CO</option>
+        </select>
+      </label>
+
+      <label class="field">
+        <span>Estación</span>
+        <select id="station"></select>
+      </label>
+
+      <div class="field-row">
+        <label class="field">
+          <span>Desde</span>
+          <input type="date" id="start-date">
+        </label>
+        <label class="field">
+          <span>Hasta</span>
+          <input type="date" id="end-date">
+        </label>
+      </div>
+
+      <div class="presets">
+        <button type="button" data-preset="1m">1 mes</button>
+        <button type="button" data-preset="1y">1 año</button>
+        <button type="button" data-preset="5y">5 años</button>
+        <button type="button" data-preset="all">Todo</button>
+      </div>
+
+      <button type="button" id="apply" class="btn-primary">Aplicar</button>
     </section>
+
+    <section id="stats" hidden></section>
 
     <footer>
       <p class="legend-title">Estaciones de medición</p>

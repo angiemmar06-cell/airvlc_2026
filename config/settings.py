@@ -10,10 +10,20 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# GeoDjango en Windows: apuntamos a las DLL de GDAL/GEOS que trae QGIS.
+# Python 3.8+ ignora PATH para cargar DLLs nativas, hay que declararlo con add_dll_directory
+# para que gdal312.dll encuentre sus dependencias (proj, sqlite, etc.) en la misma carpeta.
+_QGIS_BIN = r"C:\Program Files\QGIS 3.44.9\bin"
+if os.path.isdir(_QGIS_BIN):
+    os.add_dll_directory(_QGIS_BIN)
+    GDAL_LIBRARY_PATH = os.path.join(_QGIS_BIN, "gdal312.dll")
+    GEOS_LIBRARY_PATH = os.path.join(_QGIS_BIN, "geos_c.dll")
 
 
 # Quick-start development settings - unsuitable for production
@@ -82,6 +92,11 @@ DATABASES = {
         'PASSWORD': 'airvlc2026@',
         'HOST': 'localhost',
         'PORT': '5432',
+        # Fuerza los mensajes del servidor en ingles/ASCII: si Postgres devuelve
+        # un error, psycopg2 no petara al decodificar (windows-1252 vs utf-8).
+        'OPTIONS': {
+            'options': '-c lc_messages=C',
+        },
     }
 }
 

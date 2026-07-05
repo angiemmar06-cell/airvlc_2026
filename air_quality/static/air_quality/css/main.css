@@ -36,19 +36,108 @@ body {
   font-size: 13px;
 }
 
-#controls .placeholder {
-  margin: 0 0 8px;
+#controls {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.field { display: flex; flex-direction: column; gap: 4px; }
+
+.field > span {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
   color: #94a3b8;
+}
+
+.field select,
+.field input[type="date"] {
+  background: #1e293b;
+  color: #e2e8f0;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 13px;
+  font-family: inherit;
+}
+
+.field select:focus,
+.field input[type="date"]:focus {
+  outline: none;
+  border-color: #38bdf8;
+}
+
+.field-row { display: flex; gap: 10px; }
+.field-row .field { flex: 1; }
+
+.presets { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.presets button {
+  background: transparent;
+  color: #cbd5e1;
+  border: 1px solid #334155;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.presets button:hover { border-color: #64748b; color: #e2e8f0; }
+
+.btn-primary {
+  background: #38bdf8;
+  color: #0f172a;
+  border: 0;
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-primary:hover { background: #7dd3fc; }
+.btn-primary:disabled { background: #475569; color: #cbd5e1; cursor: wait; }
+
+#stats {
+  background: #1e293b;
+  border-radius: 8px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+#stats h2 {
+  margin: 0;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+.ica-chip {
+  align-self: flex-start;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 12px;
+  margin: 0;
   font-size: 13px;
 }
 
-#controls .placeholder-list {
-  margin: 0;
-  padding-left: 18px;
-  color: #64748b;
-  font-size: 13px;
-  line-height: 1.7;
-}
+.stat-grid dt { color: #94a3b8; }
+.stat-grid dd { margin: 0; color: #e2e8f0; }
+
+#stats .error { margin: 0; color: #fca5a5; font-size: 13px; }
 
 #sidebar footer {
   margin-top: auto;
