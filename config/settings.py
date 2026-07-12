@@ -92,11 +92,6 @@ DATABASES = {
         'PASSWORD': 'airvlc2026@',
         'HOST': 'localhost',
         'PORT': '5432',
-        # Fuerza los mensajes del servidor en ingles/ASCII: si Postgres devuelve
-        # un error, psycopg2 no petara al decodificar (windows-1252 vs utf-8).
-        'OPTIONS': {
-            'options': '-c lc_messages=C',
-        },
     }
 }
 
