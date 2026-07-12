@@ -195,7 +195,10 @@ function renderChart(payload) {
     return;
   }
 
-  const labels = points.map((p) => p.time);
+  const isHourly = payload.aggregate === "hourly";
+  // En horario, el backend manda "2020-06-15T14:00:00+00:00" -> nos quedamos
+  // solo con "14:00" para que el eje X se lea claro.
+  const labels = points.map((p) => (isHourly ? p.time.slice(11, 16) : p.time));
   const values = points.map((p) => p.value);
   const unit = payload.unit || "";
 
@@ -253,10 +256,16 @@ async function applyFilters() {
   const station = els.station.value;
   if (!station) return;
 
+  // Si Desde = Hasta (un solo dia), pide agregacion horaria: 24 puntos
+  // que muestran los picos del dia. En rangos mayores, agregacion diaria.
+  const start = els.startDate.value;
+  const end = els.endDate.value;
+  const aggregate = start && end && start === end ? "hourly" : "daily";
+
   const params = new URLSearchParams({
     station,
     pollutant: els.pollutant.value,
-    aggregate: "daily",
+    aggregate,
   });
   if (els.startDate.value) params.set("start_date", els.startDate.value);
   if (els.endDate.value) params.set("end_date", els.endDate.value);
