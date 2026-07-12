@@ -4,8 +4,10 @@ const DEFAULT_MARKER_COLOR = "#64748b";
 const MARKER_STYLE = { radius: 9, color: "#0f172a", weight: 2, fillOpacity: 0.85 };
 
 const map = L.map("map").setView(VALENCIA_CENTER, DEFAULT_ZOOM);
-L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+// Ortofoto de Esri World Imagery. Ojo con el orden {z}/{y}/{x}: al reves
+// que OSM. Sin API key, gratis para uso no comercial.
+L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
+  attribution: 'Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community',
   maxZoom: 19,
 }).addTo(map);
 
