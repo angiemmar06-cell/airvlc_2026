@@ -75,6 +75,48 @@
 
   <main id="map"></main>
 
+  <div id="thresholds-modal" class="modal" hidden>
+    <div class="modal-backdrop" data-close></div>
+    <div class="modal-content" role="dialog" aria-labelledby="modal-title">
+      <header class="modal-header">
+        <h2 id="modal-title">Umbrales de calidad del aire</h2>
+        <button type="button" class="modal-close" data-close aria-label="Cerrar">×</button>
+      </header>
+      <p>
+        La OMS actualizó sus recomendaciones en <strong>septiembre de 2021</strong>,
+        volviéndolas mucho más estrictas para los contaminantes urbanos (NO₂, PM10, PM2.5).
+        Bajo esos nuevos umbrales, la mayoría de ciudades europeas — Valencia incluida —
+        pasarían de "Bueno" a "Moderado" o peor todo el año.
+      </p>
+      <p>
+        AireVLC clasifica con los umbrales de <strong>OMS 2005</strong>. Esta tabla
+        muestra cuánto ha cambiado el estándar:
+      </p>
+      <table class="thresholds-table">
+        <thead>
+          <tr>
+            <th>Contaminante</th>
+            <th>OMS 2005 <span>(usamos)</span></th>
+            <th>OMS 2021</th>
+            <th>Cambio</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>NO₂</td><td>40 µg/m³</td><td>10 µg/m³</td><td>4× más estricto</td></tr>
+          <tr><td>PM10</td><td>20 µg/m³</td><td>15 µg/m³</td><td>25% más estricto</td></tr>
+          <tr><td>PM2.5</td><td>10 µg/m³</td><td>5 µg/m³</td><td>2× más estricto</td></tr>
+          <tr><td>O₃</td><td>60 µg/m³</td><td>60 µg/m³</td><td>Sin cambio</td></tr>
+          <tr><td>SO₂</td><td>40 µg/m³</td><td>40 µg/m³</td><td>Sin cambio</td></tr>
+          <tr><td>CO</td><td>4 mg/m³</td><td>4 mg/m³</td><td>Sin cambio</td></tr>
+        </tbody>
+      </table>
+      <p class="modal-note">
+        Los cambios más fuertes son en los contaminantes del tráfico urbano (NO₂, PM10, PM2.5).
+        Los del ozono e industriales (O₃, SO₂, CO) se mantuvieron.
+      </p>
+    </div>
+  </div>
+
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
           integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
           crossorigin=""></script>

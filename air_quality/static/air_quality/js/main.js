@@ -174,7 +174,7 @@ function renderStats(data) {
   const unit = data.unit || "";
   els.stats.innerHTML = `
     <h2>Resumen — ${data.station}</h2>
-    ${cat ? `<div class="ica-chip" style="background:${cat.color}">${cat.label}</div>` : ""}
+    ${cat ? `<div class="ica-chip" style="background:${cat.color}">${cat.label}<button type="button" class="info-btn" aria-label="Ver umbrales OMS 2005 vs 2021">i</button></div>` : ""}
     <dl class="stat-grid">
       <dt>Media</dt><dd>${formatValue(data.stats.mean)} ${unit}</dd>
       <dt>Mínimo</dt><dd>${formatValue(data.stats.min)} ${unit}</dd>
@@ -299,6 +299,20 @@ els.apply.addEventListener("click", applyFilters);
 els.presets.forEach((btn) =>
   btn.addEventListener("click", () => applyPreset(btn.dataset.preset))
 );
+
+// Modal de umbrales OMS. Uso event delegation en #stats porque el boton
+// "i" vive dentro del chip que se re-renderiza cada Aplicar, un listener
+// directo al boton se perderia. El contenedor #stats es estable.
+const modal = document.getElementById("thresholds-modal");
+els.stats.addEventListener("click", (e) => {
+  if (e.target.closest(".info-btn")) modal.hidden = false;
+});
+modal.addEventListener("click", (e) => {
+  if (e.target.hasAttribute("data-close")) modal.hidden = true;
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && !modal.hidden) modal.hidden = true;
+});
 
 (async () => {
   try {
