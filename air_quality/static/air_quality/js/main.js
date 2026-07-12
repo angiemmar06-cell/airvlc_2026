@@ -98,6 +98,12 @@ function applyPreset(preset) {
 
   els.startDate.value = start < min ? min : start;
   els.endDate.value = max;
+
+  // Marca visualmente cual preset esta activo: quita la clase de todos
+  // y ponla al que coincide con `preset`.
+  els.presets.forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.preset === preset);
+  });
 }
 
 const formatValue = (v) => (v == null ? "—" : Number(v).toFixed(1));
