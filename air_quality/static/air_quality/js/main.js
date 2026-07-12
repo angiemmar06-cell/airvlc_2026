@@ -17,8 +17,12 @@ const els = {
   presets: document.querySelectorAll("[data-preset]"),
   apply: document.getElementById("apply"),
   stats: document.getElementById("stats"),
+  chartSection: document.getElementById("chart-section"),
+  chartCanvas: document.getElementById("chart"),
   stationCount: document.getElementById("station-count"),
 };
+
+let chartInstance = null;
 
 const markers = new Map(); // name -> L.circleMarker
 let dataRange = { min_date: null, max_date: null };
@@ -127,6 +131,68 @@ function renderStats(data) {
 function renderError(message) {
   els.stats.hidden = false;
   els.stats.innerHTML = `<p class="error">${message}</p>`;
+  els.chartSection.hidden = true;
+}
+
+function renderChart(payload) {
+  const points = payload.data || [];
+  if (points.length === 0) {
+    els.chartSection.hidden = true;
+    return;
+  }
+
+  const labels = points.map((p) => p.time);
+  const values = points.map((p) => p.value);
+  const unit = payload.unit || "";
+
+  // Chart.js no permite pintar dos veces en el mismo canvas: hay que
+  // destruir el chart anterior antes de crear el nuevo.
+  if (chartInstance) chartInstance.destroy();
+
+  chartInstance = new Chart(els.chartCanvas.getContext("2d"), {
+    type: "line",
+    data: {
+      labels,
+      datasets: [{
+        label: `${payload.pollutant} (${unit})`,
+        data: values,
+        borderColor: "#38bdf8",
+        backgroundColor: "rgba(56, 189, 248, 0.15)",
+        fill: true,
+        tension: 0.25,
+        pointRadius: 0,
+        borderWidth: 2,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: "index", intersect: false },
+      scales: {
+        x: {
+          ticks: { color: "#94a3b8", maxTicksLimit: 6 },
+          grid: { color: "rgba(148, 163, 184, 0.1)" },
+        },
+        y: {
+          ticks: { color: "#94a3b8" },
+          grid: { color: "rgba(148, 163, 184, 0.1)" },
+        },
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: "#0f172a",
+          titleColor: "#e2e8f0",
+          bodyColor: "#e2e8f0",
+          callbacks: {
+            label: (ctx) => `${ctx.parsed.y?.toFixed(1)} ${unit}`,
+          },
+        },
+      },
+    },
+  });
+
+  els.chartSection.hidden = false;
 }
 
 async function applyFilters() {
@@ -150,6 +216,7 @@ async function applyFilters() {
     if (!res.ok) throw new Error(payload.error || `HTTP ${res.status}`);
 
     renderStats(payload);
+    renderChart(payload);
     resetAllMarkers();
     if (payload.overall_category) {
       colorStationMarker(payload.station, payload.overall_category.color);

@@ -18,22 +18,24 @@
     </header>
 
     <section id="controls">
-      <label class="field">
-        <span>Contaminante</span>
-        <select id="pollutant">
-          <option value="no2">NO₂</option>
-          <option value="pm10">PM10</option>
-          <option value="pm2_5">PM2.5</option>
-          <option value="o3">O₃</option>
-          <option value="so2">SO₂</option>
-          <option value="co">CO</option>
-        </select>
-      </label>
+      <div class="field-row">
+        <label class="field">
+          <span>Contaminante</span>
+          <select id="pollutant">
+            <option value="no2">NO₂</option>
+            <option value="pm10">PM10</option>
+            <option value="pm2_5">PM2.5</option>
+            <option value="o3">O₃</option>
+            <option value="so2">SO₂</option>
+            <option value="co">CO</option>
+          </select>
+        </label>
 
-      <label class="field">
-        <span>Estación</span>
-        <select id="station"></select>
-      </label>
+        <label class="field">
+          <span>Estación</span>
+          <select id="station"></select>
+        </label>
+      </div>
 
       <div class="field-row">
         <label class="field">
@@ -58,6 +60,11 @@
 
     <section id="stats" hidden></section>
 
+    <section id="chart-section" hidden>
+      <h2>Evolución temporal</h2>
+      <div class="chart-wrap"><canvas id="chart"></canvas></div>
+    </section>
+
     <footer>
       <p class="legend-title">Estaciones de medición</p>
       <p class="legend-detail" id="station-count">Cargando…</p>
@@ -69,6 +76,7 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
           integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
           crossorigin=""></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script src="{% static 'air_quality/js/main.js' %}"></script>
 </body>
 </html>
