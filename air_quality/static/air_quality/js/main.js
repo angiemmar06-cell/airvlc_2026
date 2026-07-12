@@ -88,23 +88,34 @@ function subtractDays(dateStr, days) {
   return d.toISOString().slice(0, 10);
 }
 
+function addDays(dateStr, days) {
+  const d = new Date(dateStr + "T00:00:00Z");
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+const PRESET_DAYS = { "1m": 30, "1y": 365, "5y": 365 * 5 };
+
 function applyPreset(preset) {
   const max = dataRange.max_date;
   const min = dataRange.min_date;
   if (!max || !min) return;
 
-  const start = {
-    "1m": subtractDays(max, 30),
-    "1y": subtractDays(max, 365),
-    "5y": subtractDays(max, 365 * 5),
-    all: min,
-  }[preset];
+  if (preset === "all") {
+    els.startDate.value = min;
+    els.endDate.value = max;
+  } else if (els.startDate.value) {
+    // Usuario puso una fecha en Desde -> avanzamos N dias hacia adelante,
+    // capando en el maximo de datos disponibles.
+    const end = addDays(els.startDate.value, PRESET_DAYS[preset]);
+    els.endDate.value = end > max ? max : end;
+  } else {
+    // Sin Desde -> anclamos al final de datos y retrocedemos N dias.
+    const start = subtractDays(max, PRESET_DAYS[preset]);
+    els.startDate.value = start < min ? min : start;
+    els.endDate.value = max;
+  }
 
-  els.startDate.value = start < min ? min : start;
-  els.endDate.value = max;
-
-  // Marca visualmente cual preset esta activo: quita la clase de todos
-  // y ponla al que coincide con `preset`.
   els.presets.forEach((btn) => {
     btn.classList.toggle("active", btn.dataset.preset === preset);
   });
