@@ -15,12 +15,18 @@ const els = {
   startDate: document.getElementById("start-date"),
   endDate: document.getElementById("end-date"),
   presets: document.querySelectorAll("[data-preset]"),
+  presetNote: document.getElementById("preset-note"),
   apply: document.getElementById("apply"),
   stats: document.getElementById("stats"),
   chartSection: document.getElementById("chart-section"),
   chartCanvas: document.getElementById("chart"),
   stationCount: document.getElementById("station-count"),
 };
+
+function formatDateHuman(isoDate) {
+  const [y, m, d] = isoDate.split("-");
+  return `${d}/${m}/${y}`;
+}
 
 let chartInstance = null;
 
@@ -80,6 +86,17 @@ async function loadMeta() {
   const res = await fetch("/api/meta/");
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   dataRange = await res.json();
+
+  // Restringe el calendario del navegador al rango real de datos:
+  // no puedes seleccionar dias fuera de [min, max].
+  if (dataRange.min_date) {
+    els.startDate.min = dataRange.min_date;
+    els.endDate.min = dataRange.min_date;
+  }
+  if (dataRange.max_date) {
+    els.startDate.max = dataRange.max_date;
+    els.endDate.max = dataRange.max_date;
+  }
 }
 
 function subtractDays(dateStr, days) {
@@ -101,20 +118,34 @@ function applyPreset(preset) {
   const min = dataRange.min_date;
   if (!max || !min) return;
 
+  let note = "";
+
   if (preset === "all") {
     els.startDate.value = min;
     els.endDate.value = max;
   } else if (els.startDate.value) {
-    // Usuario puso una fecha en Desde -> avanzamos N dias hacia adelante,
-    // capando en el maximo de datos disponibles.
+    // Usuario puso una fecha en Desde -> avanzamos N dias hacia adelante.
     const end = addDays(els.startDate.value, PRESET_DAYS[preset]);
-    els.endDate.value = end > max ? max : end;
+    if (end > max) {
+      els.endDate.value = max;
+      note = `Solo hay datos hasta ${formatDateHuman(max)}. Rango cortado.`;
+    } else {
+      els.endDate.value = end;
+    }
   } else {
     // Sin Desde -> anclamos al final de datos y retrocedemos N dias.
     const start = subtractDays(max, PRESET_DAYS[preset]);
-    els.startDate.value = start < min ? min : start;
+    if (start < min) {
+      els.startDate.value = min;
+      note = `Solo hay datos desde ${formatDateHuman(min)}. Rango cortado.`;
+    } else {
+      els.startDate.value = start;
+    }
     els.endDate.value = max;
   }
+
+  els.presetNote.textContent = note;
+  els.presetNote.hidden = !note;
 
   els.presets.forEach((btn) => {
     btn.classList.toggle("active", btn.dataset.preset === preset);
@@ -124,9 +155,21 @@ function applyPreset(preset) {
 const formatValue = (v) => (v == null ? "—" : Number(v).toFixed(1));
 
 function renderStats(data) {
+  els.stats.hidden = false;
+
+  // Caso sin datos: mensaje explicito, no un bloque de guiones que confunde.
+  if (!data.stats || data.stats.count === 0) {
+    const from = data.start_date ? formatDateHuman(data.start_date) : "el inicio";
+    const to = data.end_date ? formatDateHuman(data.end_date) : "el final";
+    els.stats.innerHTML = `
+      <h2>Sin datos</h2>
+      <p class="no-data">No hay mediciones de <strong>${data.pollutant.toUpperCase()}</strong> en <strong>${data.station}</strong> entre ${from} y ${to}.</p>
+    `;
+    return;
+  }
+
   const cat = data.overall_category;
   const unit = data.unit || "";
-  els.stats.hidden = false;
   els.stats.innerHTML = `
     <h2>Resumen — ${data.station}</h2>
     ${cat ? `<div class="ica-chip" style="background:${cat.color}">${cat.label}</div>` : ""}

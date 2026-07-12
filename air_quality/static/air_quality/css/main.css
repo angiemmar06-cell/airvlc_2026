@@ -145,6 +145,14 @@ body {
 .stat-grid dd { margin: 0; color: #e2e8f0; }
 
 #stats .error { margin: 0; color: #fca5a5; font-size: 13px; }
+#stats .no-data { margin: 0; color: #cbd5e1; font-size: 13px; line-height: 1.5; }
+
+.preset-note {
+  margin: -4px 0 0;
+  font-size: 12px;
+  color: #f1c40f;
+  line-height: 1.4;
+}
 
 #chart-section {
   background: #1e293b;
