@@ -1,6 +1,7 @@
 import requests
 from datetime import datetime
 
+from django.contrib.gis.geos import Point
 from django.core.management.base import BaseCommand
 from django.db import transaction
 from django.utils import timezone
@@ -10,6 +11,27 @@ from air_quality.models import Station, Measurement
 
 API_URL = "https://opendata.vlci.valencia.es/api/3/action/datastore_search"
 RESOURCE_ID = "93438700-3338-4dbf-a8ff-1c6dca337cd9"
+
+# Coordenadas oficiales de las 13 estaciones RVVCCA. Si el importer se
+# encuentra una estacion nueva del CSV que no existe aun en la tabla
+# Station, la crea al vuelo usando estas coordenadas. Si el nombre del
+# CSV no esta aqui, el registro se salta con un warning explicito
+# (probablemente una estacion nueva o un typo del CSV).
+STATION_COORDS = {
+    "Avda. Francia":             (39.4580, -0.3495),
+    "Bulevard Sud":              (39.4530, -0.3860),
+    "Conselleria Meteo":         (39.4750, -0.3680),
+    "Moli del Sol":              (39.4630, -0.4050),
+    "Nazaret Meteo":             (39.4520, -0.3370),
+    "Pista Silla":               (39.4440, -0.3940),
+    "Politecnico":               (39.4810, -0.3420),
+    "Puerto Moll Trans. Ponent": (39.4410, -0.3250),
+    "Puerto Valencia":           (39.4470, -0.3180),
+    "Puerto llit antic Turia":   (39.4560, -0.3280),
+    "Valencia Centro":           (39.4700, -0.3764),
+    "Valencia Olivereta":        (39.4740, -0.3960),
+    "Viveros":                   (39.4790, -0.3650),
+}
 
 
 class Command(BaseCommand):
@@ -112,16 +134,25 @@ class Command(BaseCommand):
                         skipped_count += 1
                         continue
 
-                    try:
-                        station = Station.objects.get(name=station_name)
-                    except Station.DoesNotExist:
-                        skipped_count += 1
-                        self.stdout.write(
-                            self.style.WARNING(
-                                f"Skipped record: station '{station_name}' not found."
+                    station = Station.objects.filter(name=station_name).first()
+                    if not station:
+                        coords = STATION_COORDS.get(station_name)
+                        if coords is None:
+                            skipped_count += 1
+                            self.stdout.write(
+                                self.style.WARNING(
+                                    f"Skipped record: station '{station_name}' unknown (not in STATION_COORDS)."
+                                )
                             )
+                            continue
+                        lat, lng = coords
+                        station = Station.objects.create(
+                            name=station_name,
+                            location=Point(lng, lat, srid=4326),
                         )
-                        continue
+                        self.stdout.write(
+                            self.style.SUCCESS(f"Created station: {station_name}")
+                        )
 
                     measured_at = self.combine_datetime(fecha_str, hora_str)
                     if not measured_at:
